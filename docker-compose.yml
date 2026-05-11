@@ -344,10 +344,10 @@ services:
       - ${CONFIG_ROOT:-.}/gluetun:/gluetun
     environment:
       - TZ=${TIMEZONE}
-      - VPN_SERVICE=${VPN_SERVICE:-protonvpn}
-      - VPN_PROTOCOL=${VPN_PROTOCOL:-wireguard}
-      - PROTONVPN_USERNAME=${PROTONVPN_USERNAME}
-      - PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD}
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-protonvpn}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      - OPENVPN_USER=${PROTONVPN_USERNAME}
+      - OPENVPN_PASSWORD=${PROTONVPN_PASSWORD}
       - LOCAL_NETWORK=${LOCAL_NETWORK:-192.168.0.0/16}
     restart: always
   cross-seed:
