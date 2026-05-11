@@ -164,12 +164,13 @@ but you could use other providers:
 - NordVPN + OpenVPN: [bubuntux/nordvpn](https://hub.docker.com/r/bubuntux/nordvpn/dockerfile)
 - NordVPN + WireGuard (NordLynx): [bubuntux/nordlynx](https://hub.docker.com/r/bubuntux/nordlynx)
 
-For PIA + WireGuard, fill `.env` and fill it with your PIA credentials.
+This stack also supports ProtonVPN via the gluetun container.
 
-The location of the server it will connect to is set by `LOC=ca`, defaulting to Montreal - Canada.
+For ProtonVPN WireGuard, set `VPN_SERVICE=protonvpn`, `VPN_PROTOCOL=wireguard`, `PROTONVPN_USERNAME`, and `PROTONVPN_PASSWORD` in `.env`.
 
-You need to fill the credentials in the `PIA_*` environment variable,
-otherwise the VPN container will exit and qBittorrent will not start.
+For PIA + WireGuard, the previous configuration still works, but only if you keep the PIA-specific environment variables.
+
+You need to fill the credentials in either the `PROTONVPN_*` or `PIA_*` environment variables, otherwise the VPN container will exit and qBittorrent will not start.
 
 ## Sonarr, Radarr & Lidarr
 

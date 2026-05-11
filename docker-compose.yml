@@ -303,8 +303,7 @@ services:
       - ${DOWNLOAD_ROOT}:/data/torrents
     restart: always
     healthcheck:
-      # Container may fail if the PIA's token expired, so mark as unhealthy when there is no internet connection
-      # see: https://github.com/qdm12/gluetun/issues/641#issuecomment-933856220
+      # Container may fail if the VPN service is down, so mark as unhealthy when there is no internet connection
       test:
         ["CMD", "curl", "--fail", "http://127.0.0.1:8080", "https://google.com"]
       interval: 1m
@@ -340,32 +339,19 @@ services:
       - homepage.widget.username=${QBITTORRENT_USERNAME}
       - homepage.widget.password=${QBITTORRENT_PASSWORD}
   vpn:
-    image: ghcr.io/thrnz/docker-wireguard-pia:latest
+    image: qmcgaw/gluetun:latest
     container_name: vpn
-    volumes:
-      - ${CONFIG_ROOT:-.}/pia:/pia
-      - ${CONFIG_ROOT:-.}/pia-shared:/pia-shared
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
+    volumes:
+      - ${CONFIG_ROOT:-.}/gluetun:/gluetun
     environment:
-      - LOC=${PIA_LOCATION}
-      - USER=${PIA_USER}
-      - PASS=${PIA_PASS}
-      - QBT_USER=${QBITTORRENT_USERNAME}
-      - QBT_PASS=${QBITTORRENT_PASSWORD}
-      - LOCAL_NETWORK=${PIA_LOCAL_NETWORK}
-      - PORT_FORWARDING=1
-      - PORT_PERSIST=1
-      - PORT_SCRIPT=/pia-shared/portupdate-qbittorrent.sh
-      - FIREWALL=0
-      - ACTIVE_HEALTHCHECKS=1
-      - RECONNECT=1
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.default.disable_ipv6=1
-      - net.ipv6.conf.all.disable_ipv6=1
-      - net.ipv6.conf.lo.disable_ipv6=1
+      - TZ=${TIMEZONE}
+      - VPN_SERVICE=${VPN_SERVICE:-protonvpn}
+      - VPN_PROTOCOL=${VPN_PROTOCOL:-wireguard}
+      - PROTONVPN_USERNAME=${PROTONVPN_USERNAME}
+      - PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD}
+      - LOCAL_NETWORK=${LOCAL_NETWORK:-192.168.0.0/16}
     restart: always
   cross-seed:
     image: ghcr.io/cross-seed/cross-seed:latest
