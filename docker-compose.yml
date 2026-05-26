@@ -455,7 +455,7 @@ services:
     volumes:
       - ${CONFIG_ROOT:-.}/jellyfin/config:/config
       - ${CONFIG_ROOT:-.}/jellyfin/cache:/cache
-      - ${DATA_ROOT}:/media
+      - ${DATA_ROOT}:/data
     ports:
       - "7359:7359/udp"
       - "1900:1900/udp"
