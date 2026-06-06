@@ -4,9 +4,7 @@ services:
     container_name: traefik
     restart: always
     environment:
-      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
-      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
-      - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
       - LETS_ENCRYPT_EMAIL=${LETS_ENCRYPT_EMAIL}
     command:
       - --ping=true
@@ -15,8 +13,9 @@ services:
       - --entrypoints.web.address=:80
       - --entrypoints.web-secure.address=:443
       - --certificatesresolvers.myresolver.acme.dnschallenge=${DNS_CHALLENGE:-true}
-      - --certificatesresolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-cloudflare}
+      - --certificatesresolvers.myresolver.acme.dnschallenge.provider=${DNS_CHALLENGE_PROVIDER:-duckdns}
       - --certificatesresolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      - --certificatesresolvers.myresolver.acme.dnschallenge.delayBeforeCheck=60
       - --certificatesresolvers.myresolver.acme.caserver=${LETS_ENCRYPT_CA_SERVER:-https://acme-v02.api.letsencrypt.org/directory}
       - --certificatesresolvers.myresolver.acme.email=${LETS_ENCRYPT_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
@@ -166,21 +165,30 @@ services:
       - ${CONFIG_ROOT:-.}/seerr:/app/config
     restart: always
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1"]
       start_period: 20s
       timeout: 3s
       interval: 1m
       retries: 10
     labels:
       - traefik.enable=true
-      - traefik.http.routers.seerr.rule=(Host(`${SEERR_HOSTNAME}`))
+      # 1. Route based on your primary domain + the subfolder path
+      - traefik.http.routers.seerr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/seerr`))
       - traefik.http.routers.seerr.tls=${ENABLE_HTTPS:-false}
       - traefik.http.routers.seerr.tls.certresolver=myresolver
       - traefik.http.services.seerr.loadbalancer.server.port=5055
+      
+      # 2. Add the middleware chain to handle the subfolder prefix stripping
+      #  required because seerr does not natively support being served from a subfolder, and this allows it to work without needing to configure a base path in seerr itself
+      - traefik.http.routers.seerr.middlewares=seerr-strip
+      - traefik.http.middlewares.seerr-strip.stripprefix.prefixes=/seerr
+      - traefik.http.middlewares.seerr-strip.stripprefix.forceSlash=true
+
+      # 3. Updated Homepage config to point to the secure subfolder link
       - homepage.group=Media
       - homepage.name=Seerr
       - homepage.icon=jellyseerr.png
-      - homepage.href=https://${SEERR_HOSTNAME}
+      - homepage.href=/seerr
       - homepage.description=Content Recommendations and Request Management
       - homepage.weight=3
       - homepage.widget.type=jellyseerr
