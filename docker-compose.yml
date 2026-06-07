@@ -171,29 +171,19 @@ services:
       retries: 10
     labels:
       - traefik.enable=true
-
-      # 1. Local LAN Router (HTTP via 192.168.2.66/seerr)
-      - traefik.http.routers.seerr-lan.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/seerr`))
-      - traefik.http.routers.seerr-lan.entrypoints=web
-      - traefik.http.routers.seerr-lan.service=seerr-service
-      - traefik.http.routers.seerr-lan.middlewares=seerr-strip
-
-      # 2. Public WAN Router (HTTPS via castle1-home.duckdns.org/seerr)
-      - traefik.http.routers.seerr-wan.rule=(Host(`${WAN_HOSTNAME}`) && PathPrefix(`/seerr`))
-      - traefik.http.routers.seerr-wan.entrypoints=web-secure
-      - traefik.http.routers.seerr-wan.tls=${ENABLE_HTTPS:-false}
-      - traefik.http.routers.seerr-wan.tls.certresolver=myresolver
-      - traefik.http.routers.seerr-wan.service=seerr-service
-      - traefik.http.routers.seerr-wan.middlewares=seerr-strip
-
-      # 3. Explicit Service Port (Required when splitting routers)
-      - traefik.http.services.seerr-service.loadbalancer.server.port=5055
-
-      # 4. Shared Middleware to strip /seerr path before hitting container
+      # 1. Route based on your primary domain + the subfolder path
+      - traefik.http.routers.seerr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/seerr`))
+      - traefik.http.routers.seerr.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.seerr.tls.certresolver=myresolver
+      - traefik.http.services.seerr.loadbalancer.server.port=5055
+      
+      # 2. Add the middleware chain to handle the subfolder prefix stripping
+      #  required because seerr does not natively support being served from a subfolder, and this allows it to work without needing to configure a base path in seerr itself
+      - traefik.http.routers.seerr.middlewares=seerr-strip
       - traefik.http.middlewares.seerr-strip.stripprefix.prefixes=/seerr
       - traefik.http.middlewares.seerr-strip.stripprefix.forceSlash=true
 
-      # 5. Homepage Dashboard Config
+      # 3. Updated Homepage config to point to the secure subfolder link
       - homepage.group=Media
       - homepage.name=Seerr
       - homepage.icon=jellyseerr.png
