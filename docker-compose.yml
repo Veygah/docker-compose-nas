@@ -307,6 +307,7 @@ services:
       - DOCKER_MODS=ghcr.io/gabe565/linuxserver-mod-vuetorrent
     volumes:
       - ${CONFIG_ROOT:-.}/qbittorrent:/config
+      - ${CONFIG_ROOT:-.}/gluetun-tmp:/gluetun-tmp
       - ${DOWNLOAD_ROOT}:/data/torrents
     restart: always
     healthcheck:
@@ -319,6 +320,11 @@ services:
     depends_on:
       vpn:
         condition: service_healthy
+    entrypoint: >
+      sh -c "
+        chmod +x /config/set-port.sh &&
+        /config/set-port.sh
+      "
     labels:
       - traefik.enable=true
       - traefik.http.routers.qbittorrent.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/qbittorrent`))
@@ -352,6 +358,7 @@ services:
       - NET_ADMIN
     volumes:
       - ${CONFIG_ROOT:-.}/gluetun:/gluetun
+      - ${CONFIG_ROOT:-.}/gluetun-tmp:/tmp/gluetun
     environment:
       - TZ=${TIMEZONE}
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-protonvpn}
