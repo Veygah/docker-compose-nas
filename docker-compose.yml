@@ -308,6 +308,7 @@ services:
     volumes:
       - ${CONFIG_ROOT:-.}/qbittorrent:/config
       - ${CONFIG_ROOT:-.}/gluetun-tmp:/gluetun-tmp
+      - ${CONFIG_ROOT:-.}/qbittorrent/custom-init:/custom-cont-init.d:ro
       - ${DOWNLOAD_ROOT}:/data/torrents
     restart: always
     healthcheck:
