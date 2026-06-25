@@ -320,11 +320,6 @@ services:
     depends_on:
       vpn:
         condition: service_healthy
-    entrypoint: >
-      sh -c "
-        chmod +x /config/set-port.sh &&
-        /config/set-port.sh
-      "
     labels:
       - traefik.enable=true
       - traefik.http.routers.qbittorrent.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/qbittorrent`))
