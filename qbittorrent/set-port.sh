@@ -16,7 +16,5 @@ fi
 # This replaces the existing Session\Port=xxxxx line
 sed -i "s/^Session\\Port=.*/Session\\Port=$PORT/" "$CONF"
 
-# Hand control back to the container's original entrypoint
-# (LinuxServer.io uses /init, but if your image uses something else,
-#  this will be replaced by the command override in compose)
-exec "$@"
+# Handoff to LinuxServer's s6 init system
+exec /init
