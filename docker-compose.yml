@@ -180,27 +180,19 @@ services:
       retries: 10
     labels:
       - traefik.enable=true
-
-      # Router
-      - traefik.http.routers.seerr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/seerr`))
+      - traefik.http.routers.seerr.rule=(Host(`${SEERR_HOSTNAME}`))
       - traefik.http.routers.seerr.tls=${ENABLE_HTTPS:-false}
       - traefik.http.routers.seerr.tls.certresolver=myresolver
-
-      # Middleware: redirect /seerr → /seerr/
-      - traefik.http.middlewares.seerr-slash.redirectregex.regex=^(.*/seerr)$
-      - traefik.http.middlewares.seerr-slash.redirectregex.replacement=$1/
-      - traefik.http.middlewares.seerr-slash.redirectregex.permanent=false
-
-      # Middleware: strip /seerr so Seerr can run at root
-      - traefik.http.middlewares.seerr-strip.stripprefix.prefixes=/seerr
-      - traefik.http.middlewares.seerr-strip.stripprefix.forceSlash=true
-
-      # Attach both middlewares and set the order
-      - traefik.http.routers.seerr.middlewares=seerr-slash,seerr-strip
-
-      # Service
       - traefik.http.services.seerr.loadbalancer.server.port=5055
-
+      - homepage.group=Media
+      - homepage.name=Seerr
+      - homepage.icon=jellyseerr.png
+      - homepage.href=https://${SEERR_HOSTNAME}
+      - homepage.description=Content Recommendations and Request Management
+      - homepage.weight=3
+      - homepage.widget.type=jellyseerr
+      - homepage.widget.url=http://seerr:5055
+      - homepage.widget.key=${SEERR_API_KEY}
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
