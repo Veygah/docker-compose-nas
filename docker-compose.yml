@@ -183,8 +183,8 @@ services:
 
       # Router
       - traefik.http.routers.seerr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/seerr`))
-      - traefik.http.routers.seerr.entrypoints=websecure
-      - traefik.http.routers.seerr.tls.certresolver=letsencrypt
+      - traefik.http.routers.seerr.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.seerr.tls.certresolver=myresolver
 
       # Middleware: redirect /seerr → /seerr/
       - traefik.http.middlewares.seerr-slash.redirectregex.regex=^(.*/seerr)$
