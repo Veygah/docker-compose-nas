@@ -249,7 +249,7 @@ services:
     profiles:
       - suggestarr
   flaresolverr:
-    image: 21hsmw/flaresolverr:nodriver
+    image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     restart: always
     environment:
