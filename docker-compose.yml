@@ -259,7 +259,7 @@ services:
       - TZ=${TIMEZONE}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.flaresolverr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/radarr`))
+      - traefik.http.routers.flaresolverr.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/flaresolverr`))
       - traefik.http.routers.flaresolverr.tls=${ENABLE_HTTPS:-false}
       - traefik.http.services.flaresolverr.loadbalancer.server.port=8191
     profiles:
@@ -530,6 +530,54 @@ services:
       - homepage.widget.password=${CALIBRE_PASSWORD}
     profiles:
       - calibre-web
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: always
+    user: ${USER_ID}:${GROUP_ID}
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_ROOT:-.}/filebrowser/config:/config
+      - ${CONFIG_ROOT:-.}/filebrowser/database:/database
+      - ${DATA_ROOT}:/srv
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.filebrowser.rule=(Host(`filebrowser.${HOSTNAME}`))
+      - traefik.http.routers.filebrowser.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.filebrowser.tls.certresolver=myresolver
+      - traefik.http.services.filebrowser.loadbalancer.server.port=80
+      - homepage.group=Utilities
+      - homepage.name=File Browser
+      - homepage.icon=filebrowser.png
+      - homepage.href=https://filebrowser.${HOSTNAME}
+      - homepage.description=File Browser
+      - homepage.weight=5
+    profiles:
+      - filebrowser
+  ncdu-viewer:
+    image: abesesr/ncdu-web-viewer:latest
+    container_name: ncdu-web-viewer
+    restart: unless-stopped
+    environment:
+      - NCDU_WEB_VIEWER_SCAN_FROM=folder
+      - NCDU_WEB_VIEWER_READONLY=yes
+    volumes:
+      - ${DATA_ROOT}:/folder-to-scan/
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ncdu.rule=(Host(`ncdu.${HOSTNAME}`))
+      - traefik.http.routers.ncdu.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.ncdu.tls.certresolver=myresolver
+      - traefik.http.services.ncdu.loadbalancer.server.port=3000
+      - homepage.group=Utilities
+      - homepage.name=NCDU Disk Analyzer
+      - homepage.icon=mdi-harddisk
+      - homepage.href=https://ncdu.${HOSTNAME}
+      - homepage.description=Disk space visualizer
+      - homepage.weight=5
+    profiles:
+      - ncdu
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
