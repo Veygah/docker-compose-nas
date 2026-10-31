@@ -578,6 +578,30 @@ services:
       - homepage.weight=5
     profiles:
       - ncdu
+  qbit-manage:
+    image: ghcr.io/stuffanthings/qbit_manage:latest
+    container_name: qbit-manage
+    restart: unless-stopped
+    environment:
+      - QBT_WEB_SERVER=true
+    volumes:
+      - ${CONFIG_ROOT:-.}/qbit-manage:/config:rw
+      - ${DATA_ROOT}:/data:rw
+      - ${CONFIG_ROOT:-.}/qbittorrent/:/qbittorrent/:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.qbitmanage.rule=(Host(`qbitmanage.${HOSTNAME}`))
+      - traefik.http.routers.qbitmanage.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.qbitmanage.tls.certresolver=myresolver
+      - traefik.http.services.qbitmanage.loadbalancer.server.port=8181
+      - homepage.group=Download
+      - homepage.name=Qbit Manage
+      - homepage.icon=mdi-desktop-classic
+      - homepage.href=https://qbitmanage.${HOSTNAME}
+      - homepage.description=qBit Manage
+      - homepage.weight=5
+    profiles:
+      - qbitmanage
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
