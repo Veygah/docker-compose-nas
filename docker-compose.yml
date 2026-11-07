@@ -637,6 +637,8 @@ services:
       - homepage.href=https://shelfarr.${HOSTNAME}
       - homepage.description=eBook management
       - homepage.weight=5
+    profiles:
+      - shelfarr
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
