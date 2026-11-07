@@ -495,6 +495,7 @@ services:
       - homepage.widget.type=jellyfin
       - homepage.widget.url=http://jellyfin:8096/jellyfin
       - homepage.widget.key=${JELLYFIN_API_KEY}
+      - homepage.widget.version=2
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
     container_name: calibre-web
@@ -602,6 +603,40 @@ services:
       - homepage.weight=5
     profiles:
       - qbitmanage
+  shelfarr:
+    image: ghcr.io/pedro-revez-silva/shelfarr
+    container_name: shelfarr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:80/up"]
+      interval: 1m
+      retries: 10
+    environment:
+      - SOLID_QUEUE_IN_PUMA=1
+      - SHELFARR_LIBATION_URL=http://shelfarr-libation:8080
+      - SHELFARR_LIBATION_TOKEN_FILE=/run/shelfarr-libation/token
+      - SHELFARR_LIBATION_IMPORT_ROOT=/imports/libation
+      # Keep these identical to the companion so both services can use the
+      # read-only token and completed-backup volumes.
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - CHOWN_ON_START=${CHOWN_ON_START:-auto}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ${CONFIG_ROOT:-.}/shelfarr:/rails/storage:rw
+      - ${DATA_ROOT}:/data:rw
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.shelfarr.rule=(Host(`shelfarr.${HOSTNAME}`))
+      - traefik.http.routers.shelfarr.tls=${ENABLE_HTTPS:-false}
+      - traefik.http.routers.shelfarr.tls.certresolver=myresolver
+      - traefik.http.services.shelfarr.loadbalancer.server.port=80
+      - homepage.group=Media
+      - homepage.name=Shelfarr
+      - homepage.icon=https://dashboardicons.com/pb/api/files/community_gallery/zpd3xntl0i73rqd/shelfarr_ebd31etd60.png
+      - homepage.href=https://shelfarr.${HOSTNAME}
+      - homepage.description=eBook management
+      - homepage.weight=5
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
