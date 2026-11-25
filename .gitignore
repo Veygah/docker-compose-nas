@@ -25,5 +25,9 @@ docker-compose.override.yml
 /cleanuparr
 /cross-seed
 /autobrr
+/authelia/users_database.yml
+/authelia/configuration.yml
+/authelia/db.sqlite3
+/authelia/notification.txt
 !/cleanuparr/blacklist.json
 !/cleanuparr/logs/.gitkeep

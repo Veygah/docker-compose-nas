@@ -1,0 +1,9 @@
+# Copy this file to users_database.yml, replace the example user, and generate
+# a password hash with: authelia crypto hash generate argon2
+users:
+  example:
+    displayname: 'Example User'
+    password: '$argon2id$replace_this_with_a_generated_hash'
+    email: 'example@example.com'
+    groups:
+      - 'users'
