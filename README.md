@@ -261,17 +261,23 @@ hardware.
 
 ### Public Jellyfin route
 
-The existing `HOSTNAME/jellyfin` route remains the private route. To expose Jellyfin through a separate public
-hostname, set `JELLYFIN_PUBLIC_HOSTNAME` to that hostname in `.env`:
+Both routes use the `/jellyfin` base path. Set the private `HOSTNAME` and public `JELLYFIN_PUBLIC_HOSTNAME`
+to different hostnames in `.env`:
 
 ```
-JELLYFIN_PUBLIC_HOSTNAME=jellyfin.domain.com
+HOSTNAME=jellyfin-lan.example.com
+JELLYFIN_PUBLIC_HOSTNAME=jellyfin.example.com
 ```
 
-The route is configured on the existing Jellyfin service in `docker-compose.yml`; it does not create another
-Jellyfin container. The default `disabled.invalid` hostname is reserved and won't resolve publicly. This route
-forwards directly to Jellyfin's native API and web login. Do not add Traefik forward-auth or a
-browser-only SSO plugin to the Jellyfin API routes, because TV clients do not perform OIDC redirects.
+Use these complete URLs in Jellyfin clients:
+
+- Private, available on the LAN/VPN: `https://jellyfin-lan.example.com/jellyfin`
+- Public: `https://jellyfin.example.com/jellyfin`
+
+The public router matches the public hostname and `/jellyfin` path, then forwards the request unchanged to the
+same Jellyfin container used by the private router. The default `disabled.invalid` hostname is reserved and
+won't resolve publicly. This is native Jellyfin API and web authentication: do not add Traefik forward-auth or
+a browser-only SSO plugin to these routes, because TV clients do not perform OIDC redirects.
 Keep Jellyfin password authentication enabled for TV clients, use a unique password for every user, and set
 Jellyfin's remote-access permissions to the minimum required.
 
