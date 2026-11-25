@@ -178,6 +178,8 @@ services:
       - traefik.http.routers.seerr.rule=(Host(`${SEERR_HOSTNAME}`))
       - traefik.http.routers.seerr.tls=true
       - traefik.http.routers.seerr.tls.certresolver=myresolver
+      - traefik.http.routers.seerr.middlewares=${SEERR_MIDDLEWARES:-seerr-default}
+      - traefik.http.middlewares.seerr-default.headers.customResponseHeaders.X-Content-Type-Options=nosniff
       - traefik.http.services.seerr.loadbalancer.server.port=5055
       - homepage.group=Media
       - homepage.name=Seerr
@@ -188,6 +190,32 @@ services:
       - homepage.widget.type=jellyseerr
       - homepage.widget.url=http://seerr:5055
       - homepage.widget.key=${SEERR_API_KEY}
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: always
+    environment:
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+    volumes:
+      - ${CONFIG_ROOT:-.}/authelia:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authelia.rule=Host(`${AUTHELIA_HOSTNAME}`)
+      - traefik.http.routers.authelia.tls=true
+      - traefik.http.routers.authelia.tls.certresolver=myresolver
+      - traefik.http.services.authelia.loadbalancer.server.port=9091
+      - traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth
+      - traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9091/api/health"]
+      interval: 1m
+      timeout: 5s
+      retries: 10
+    profiles:
+      - authelia
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -485,6 +513,10 @@ services:
       - traefik.http.routers.jellyfin.tls=true
       - traefik.http.routers.jellyfin.tls.certresolver=myresolver
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+      - traefik.http.routers.jellyfin-public.rule=Host(`${JELLYFIN_PUBLIC_HOSTNAME}`)
+      - traefik.http.routers.jellyfin-public.tls=true
+      - traefik.http.routers.jellyfin-public.tls.certresolver=myresolver
+      - traefik.http.services.jellyfin-public.loadbalancer.server.port=8096
       - homepage.group=Media
       - homepage.name=Jellyfin
       - homepage.icon=jellyfin.png

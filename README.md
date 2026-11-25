@@ -122,11 +122,12 @@ If you want to show Jellyfin information in the homepage, create it in Jellyfin 
 | `PIA_LOCAL_NETWORK`            | PIA local network                                                                                                                                                                                      | `192.168.0.0/16`                                 |
 | `HOSTNAME`                     | Hostname of the NAS, could be a local IP or a domain name                                                                                                                                              | `localhost`                                      |
 | `BASE_HOSTNAME`                | Base hostname of the NAS, useful if hostname is a subdomain                                                                                                                                            | `localhost`                                      |
-| `JELLYFIN_PUBLIC_HOSTNAME`     | Optional public Jellyfin hostname. This route uses native Jellyfin authentication only and must not have browser-only forward auth.                                                                            |                                                  |
+| `JELLYFIN_PUBLIC_HOSTNAME`     | Optional public Jellyfin hostname. This route uses native Jellyfin authentication only and must not have browser-only forward auth.                                                                            | `disabled.invalid`                               |
 | `AUTHELIA_HOSTNAME`            | Hostname for the optional Authelia login portal                                                                                                                                                        | `auth.localhost`                                 |
 | `AUTHELIA_JWT_SECRET`          | Long random secret used by Authelia for identity validation                                                                                                                                             |                                                  |
 | `AUTHELIA_SESSION_SECRET`      | Long random secret used to protect Authelia sessions                                                                                                                                                    |                                                  |
 | `AUTHELIA_STORAGE_ENCRYPTION_KEY` | Long random secret used to encrypt Authelia storage                                                                                                                                                 |                                                  |
+| `SEERR_MIDDLEWARES`            | Traefik middleware for Seerr. Set to `authelia` together with the `authelia` Compose profile to enable forward-auth.                                                                                                   | `seerr-default`                                  |
 | `ADGUARD_HOSTNAME`             | Optional - AdGuard Home hostname used, if enabled                                                                                                                                                      |                                                  |
 | `ADGUARD_USERNAME`             | Optional - AdGuard Home username to show details in the homepage, if enabled                                                                                                                           |                                                  |
 | `ADGUARD_PASSWORD`             | Optional - AdGuard Home password to show details in the homepage, if enabled                                                                                                                           |                                                  |
@@ -259,16 +260,16 @@ hardware.
 
 ### Public Jellyfin route
 
-The existing `HOSTNAME/jellyfin` route remains the private route and is not changed by this section.
-To expose a separate public hostname, set `JELLYFIN_PUBLIC_HOSTNAME` and append
-`jellyfin-public/docker-compose.yml` to `COMPOSE_FILE`:
+The existing `HOSTNAME/jellyfin` route remains the private route. To expose Jellyfin through a separate public
+hostname, set `JELLYFIN_PUBLIC_HOSTNAME` to that hostname in `.env`:
 
 ```
-COMPOSE_FILE=docker-compose.yml:jellyfin-public/docker-compose.yml:...
 JELLYFIN_PUBLIC_HOSTNAME=jellyfin.domain.com
 ```
 
-This route forwards directly to Jellyfin's native API and web login. Do not add Traefik forward-auth or a
+The route is configured on the existing Jellyfin service in `docker-compose.yml`; it does not create another
+Jellyfin container. The default `disabled.invalid` hostname is reserved and won't resolve publicly. This route
+forwards directly to Jellyfin's native API and web login. Do not add Traefik forward-auth or a
 browser-only SSO plugin to the Jellyfin API routes, because TV clients do not perform OIDC redirects.
 Keep Jellyfin password authentication enabled for TV clients, use a unique password for every user, and set
 Jellyfin's remote-access permissions to the minimum required.
@@ -326,7 +327,14 @@ To enable the provided integration:
    ```
 
 5. Replace the example user and hash in `authelia/users_database.yml`.
-6. Append `authelia/docker-compose.yml` to `COMPOSE_FILE`, then run `docker compose up -d`.
+6. Add `authelia` to `COMPOSE_PROFILES` and set `SEERR_MIDDLEWARES=authelia`.
+   Preserve any other profiles already in `COMPOSE_PROFILES`, separating profiles with commas.
+7. Run `docker compose up -d` as usual from the repository root.
+
+The Authelia service is in the main `docker-compose.yml` and starts only with its `authelia` profile.
+By default, Seerr uses a harmless security-headers middleware. Setting `SEERR_MIDDLEWARES=authelia` attaches
+Authelia to Seerr's existing Traefik router. Set both options together: starting Authelia without attaching the
+middleware leaves Seerr unchanged, while attaching middleware without starting Authelia will make Seerr unavailable.
 
 Authelia protects the Seerr router with Traefik `ForwardAuth`. Enable passkeys/WebAuthn or MFA for external users.
 Authelia's access policy and Seerr's local sign-in setting should be configured independently: the first protects
