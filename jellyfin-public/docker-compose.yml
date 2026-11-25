@@ -1,0 +1,8 @@
+services:
+  jellyfin:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jellyfin-public.rule=Host(`${JELLYFIN_PUBLIC_HOSTNAME}`)
+      - traefik.http.routers.jellyfin-public.tls=true
+      - traefik.http.routers.jellyfin-public.tls.certresolver=myresolver
+      - traefik.http.services.jellyfin-public.loadbalancer.server.port=8096
