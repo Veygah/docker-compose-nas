@@ -510,10 +510,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.jellyfin.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/jellyfin`))
+      - traefik.http.routers.jellyfin.priority=100
+      - traefik.http.routers.jellyfin.service=jellyfin
       - traefik.http.routers.jellyfin.tls=${ENABLE_HTTPS:-false}
       - traefik.http.routers.jellyfin.tls.certresolver=myresolver
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
       - traefik.http.routers.jellyfin-public.rule=Host(`${JELLYFIN_PUBLIC_HOSTNAME}`)
+      - traefik.http.routers.jellyfin-public.service=jellyfin-public
       - traefik.http.routers.jellyfin-public.tls=true
       - traefik.http.routers.jellyfin-public.tls.certresolver=myresolver
       - traefik.http.services.jellyfin-public.loadbalancer.server.port=8096
